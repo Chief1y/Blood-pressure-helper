@@ -55,7 +55,7 @@ Or run locally - just open `index.html` in any browser. No server needed.
 ### Deploy your own copy
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/tlak.git
+git clone https://github.com/Chief1y/Blood-pressure-helper.git
 cd tlak
 # open index.html - done
 ```
