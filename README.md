@@ -48,7 +48,7 @@ So I built (1st vibecoded app) this instead - a single HTML file that lives on G
 
 No installation needed. Just open the live app:
 
-**[→ Live App](https://YOUR_USERNAME.github.io/tlak)**
+**[→ Live App](https://chief1y.github.io/Blood-pressure-helper/)**
 
 Or run locally - just open `index.html` in any browser. No server needed.
 
