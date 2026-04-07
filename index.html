@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tlak" />
+  <title>Deník tlaku</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0a0a14; --surface:#12121f; --surface2:#1a1a2e; --border:#1e2040;
+      --text:#e8e8f0; --muted:#4a4a6a; --dim:#2a2a45;
+      --sys:#ff6b6b; --dia:#4ecdc4; --ok:#6bffb8; --bad:#ff6b6b; --accent:#7c6dfa;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow:hidden;}
+    #app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;}
+    .en{color:var(--dim);font-size:0.75em;font-family:'Space Mono',monospace;}
+    .header{padding:48px 24px 20px;flex-shrink:0;position:relative;}
+    .header::after{content:'';position:absolute;bottom:0;left:24px;right:24px;height:1px;background:var(--border);}
+    .header-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+    .header-date{font-size:28px;font-weight:800;letter-spacing:-0.02em;line-height:1;}
+    .header-status{margin-top:10px;display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:12px;}
+    .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .status-dot.done{background:var(--ok);}
+    .status-dot.pending{background:var(--bad);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 24px 100px;}
+    .scroll-area::-webkit-scrollbar{display:none;}
+    .input-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}
+    .input-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:16px;}
+    .input-row{display:flex;align-items:center;gap:10px;}
+    .input-group{flex:1;}
+    .input-sublabel{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-bottom:6px;line-height:1.6;}
+    .bp-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'Space Mono',monospace;font-size:24px;font-weight:700;text-align:center;outline:none;-webkit-appearance:none;transition:border-color .15s;}
+    .bp-input:focus{border-color:var(--accent);}
+    .bp-input::placeholder{color:var(--dim);}
+    .slash{color:var(--muted);font-size:28px;font-weight:700;flex-shrink:0;padding-bottom:2px;}
+    .save-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;width:52px;height:52px;font-size:22px;cursor:pointer;flex-shrink:0;transition:all .15s;align-self:flex-end;display:flex;align-items:center;justify-content:center;}
+    .save-btn:active{transform:scale(0.92);}
+    .save-btn:disabled{background:var(--dim);cursor:default;}
+    .cat-badge{margin-top:12px;display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;}
+    .cat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+    .saved-flash{text-align:center;color:var(--ok);font-family:'Space Mono',monospace;font-size:11px;margin-top:10px;opacity:0;transition:opacity .3s;}
+    .saved-flash.show{opacity:1;}
+    .tabs{display:flex;gap:6px;margin-bottom:20px;}
+    .tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 4px 5px;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.06em;cursor:pointer;text-align:center;transition:all .15s;-webkit-tap-highlight-color:transparent;line-height:1.5;}
+    .tab .en{display:block;font-size:7px;}
+    .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .tab.active .en{color:rgba(255,255,255,0.5);}
+    .log-entry{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+    .log-entry:last-child{border-bottom:none;}
+    .log-date{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+    .log-right{display:flex;align-items:center;gap:10px;}
+    .log-value{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;}
+    .log-cat{font-family:'Space Mono',monospace;font-size:8px;padding:3px 7px;border-radius:4px;background:var(--surface2);line-height:1.6;text-align:right;}
+    .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+    .chart-title{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;margin-bottom:16px;}
+    canvas#chartCanvas{width:100%!important;height:180px!important;}
+    .legend{display:flex;gap:20px;margin-top:14px;}
+    .legend-item{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.5;}
+    .legend-line{width:20px;height:2px;border-radius:1px;flex-shrink:0;}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+    .stat-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);line-height:1.6;}
+    .stat-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
+    .sum-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:20px;}
+    .sum-box-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;margin-bottom:10px;}
+    .empty{text-align:center;padding:48px 0;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);line-height:2.4;}
+    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,20,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:10px 0 20px;}
+    .nav-btn{flex:1;background:none;border:none;color:var(--muted);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.06em;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;transition:color .15s;-webkit-tap-highlight-color:transparent;line-height:1.5;}
+    .nav-btn.active{color:var(--accent);}
+    .nav-icon{font-size:20px;}
+    .nav-en{font-size:7px;color:var(--dim);}
+    .nav-btn.active .nav-en{color:var(--accent);opacity:0.6;}
+    .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--ok);color:#0a0a14;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;padding:10px 20px;border-radius:100px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-label">Deník tlaku · Blood pressure log</div>
+    <div class="header-date" id="headerDate">—</div>
+    <div class="header-status">
+      <div class="status-dot pending" id="statusDot"></div>
+      <span id="statusText">Načítání…</span>
+    </div>
+  </div>
+  <div class="scroll-area" id="scrollArea"></div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="input" onclick="switchView('input')">
+      <span class="nav-icon">🩺</span><span>Měření</span><span class="nav-en">Input</span>
+    </button>
+    <button class="nav-btn" data-view="log" onclick="switchView('log')">
+      <span class="nav-icon">📋</span><span>Záznamy</span><span class="nav-en">Log</span>
+    </button>
+    <button class="nav-btn" data-view="chart" onclick="switchView('chart')">
+      <span class="nav-icon">📈</span><span>Graf</span><span class="nav-en">Chart</span>
+    </button>
+    <button class="nav-btn" data-view="summary" onclick="switchView('summary')">
+      <span class="nav-icon">📊</span><span>Přehled</span><span class="nav-en">Summary</span>
+    </button>
+  </nav>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY='bp-log-v2';
+let records={},currentView='input';
+
+function loadRecords(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)records=JSON.parse(r);}catch{}}
+function saveRecords(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtDate(iso){const[y,m,d]=iso.split('-');return`${d}.${m}.${y}`;}
+function fmtShort(iso){const[,m,d]=iso.split('-');return`${d}.${m}`;}
+
+const CS_MONTHS=['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+
+function getCategory(sys,dia){
+  if(sys<120&&dia<80)return{cs:'Normální',    en:'Normal',         color:'#6bffb8'};
+  if(sys<130&&dia<80)return{cs:'Zvýšený',     en:'Elevated',       color:'#ffd93d'};
+  if(sys<140||dia<90)return{cs:'Hypertenze 1°',en:'Hypertension 1',color:'#ff9f43'};
+  return                    {cs:'Hypertenze 2°',en:'Hypertension 2',color:'#ff6b6b'};
+}
+
+function updateHeader(){
+  const t=today(),d=new Date();
+  document.getElementById('headerDate').textContent=`${d.getDate()} ${CS_MONTHS[d.getMonth()]}`;
+  const dot=document.getElementById('statusDot'),txt=document.getElementById('statusText'),rec=records[t];
+  if(rec){
+    dot.className='status-dot done';
+    const cat=getCategory(rec.sys,rec.dia);
+    txt.innerHTML=`Dnes: <span style="color:${cat.color};font-weight:700">${rec.sys}/${rec.dia}</span> · ${cat.cs} <span style="color:var(--dim);font-size:10px">/ ${cat.en}</span>`;
+  } else {
+    dot.className='status-dot pending';
+    txt.innerHTML='Dnes neměřeno <span style="color:var(--dim);font-size:10px">· not measured yet</span>';
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function switchView(view){
+  currentView=view;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  render();
+}
+
+function render(){
+  const area=document.getElementById('scrollArea');
+  if(currentView==='input')renderInput(area);
+  else if(currentView==='log')renderLog(area);
+  else if(currentView==='chart')renderChart(area);
+  else renderSummary(area);
+}
+
+function renderInput(area){
+  const t=today(),ex=records[t];
+  area.innerHTML=`
+    <div class="input-card">
+      <div class="input-label">Měření · Measurement · ${fmtDate(t)}</div>
+      <div class="input-row">
+        <div class="input-group">
+          <div class="input-sublabel">SYSTOLICKÝ<br><span class="en">Systolic</span></div>
+          <input class="bp-input" id="sysInput" type="number" inputmode="numeric" placeholder="120" min="60" max="250" value="${ex?.sys||''}" />
+        </div>
+        <div class="slash">/</div>
+        <div class="input-group">
+          <div class="input-sublabel">DIASTOLICKÝ<br><span class="en">Diastolic</span></div>
+          <input class="bp-input" id="diaInput" type="number" inputmode="numeric" placeholder="80" min="40" max="160" value="${ex?.dia||''}" />
+        </div>
+        <button class="save-btn" id="saveBtn" onclick="doSave()" ${ex?'':'disabled'}>↵</button>
+      </div>
+      <div class="cat-badge" id="catBadge" style="display:none">
+        <div class="cat-dot" id="catDot"></div>
+        <span id="catLabel"></span>
+      </div>
+      <div class="saved-flash" id="savedFlash">✓ Uloženo · Saved</div>
+    </div>
+    ${ex?`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.12em;margin-bottom:12px">DNEŠNÍ ZÁZNAM · <span style="color:var(--dim)">TODAY'S ENTRY</span></div>
+      <div style="font-family:'Space Mono',monospace;font-size:36px;font-weight:700">
+        <span style="color:var(--sys)">${ex.sys}</span><span style="color:var(--muted);font-size:24px">/</span><span style="color:var(--dia)">${ex.dia}</span>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:6px">mm Hg</div>
+    </div>`:''}
+  `;
+  const sysEl=document.getElementById('sysInput'),diaEl=document.getElementById('diaInput'),btn=document.getElementById('saveBtn');
+  function onInput(){
+    const s=parseInt(sysEl.value),d=parseInt(diaEl.value),valid=s>=60&&s<=250&&d>=40&&d<=160;
+    btn.disabled=!valid;
+    const badge=document.getElementById('catBadge');
+    if(valid){const cat=getCategory(s,d);badge.style.display='flex';document.getElementById('catDot').style.background=cat.color;document.getElementById('catLabel').style.color=cat.color;document.getElementById('catLabel').textContent=`${cat.cs} · ${cat.en}`;}
+    else badge.style.display='none';
+  }
+  sysEl.addEventListener('input',onInput);diaEl.addEventListener('input',onInput);
+  sysEl.addEventListener('keyup',e=>{if(sysEl.value.length>=3||e.key==='Enter')diaEl.focus();});
+  if(ex)onInput();
+}
+
+function doSave(){
+  const s=parseInt(document.getElementById('sysInput').value),d=parseInt(document.getElementById('diaInput').value);
+  if(!s||!d)return;
+  records[today()]={sys:s,dia:d,ts:new Date().toISOString()};
+  saveRecords();updateHeader();
+  const fl=document.getElementById('savedFlash');fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),2000);
+  showToast('✓ Uloženo · Saved');
+  setTimeout(()=>render(),300);
+}
+
+function renderLog(area){
+  const sorted=Object.entries(records).sort(([a],[b])=>b.localeCompare(a));
+  if(!sorted.length){area.innerHTML=`<div class="empty">Žádné záznamy.<br><span class="en">No entries yet.</span><br>Začni na záložce Měření 🩺</div>`;return;}
+  area.innerHTML=sorted.map(([date,v])=>{
+    const cat=getCategory(v.sys,v.dia),isToday=date===today();
+    return`<div class="log-entry">
+      <div class="log-date">${fmtDate(date)}${isToday?` <span style="color:var(--accent);font-size:9px">· dnes</span>`:''}</div>
+      <div class="log-right">
+        <div class="log-value"><span style="color:var(--sys)">${v.sys}</span><span style="color:var(--muted);font-size:14px">/</span><span style="color:var(--dia)">${v.dia}</span></div>
+        <div class="log-cat" style="color:${cat.color}">${cat.cs}<br><span class="en">${cat.en}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart(area){
+  const entries=Object.entries(records).sort(([a],[b])=>a.localeCompare(b)).slice(-14);
+  if(entries.length<2){area.innerHTML=`<div class="empty">Potřeba alespoň 2 záznamy.<br><span class="en">Need at least 2 entries.</span></div>`;return;}
+  area.innerHTML=`
+    <div class="chart-wrap">
+      <div class="chart-title">POSLEDNÍCH ${entries.length} DNÍ · LAST ${entries.length} DAYS</div>
+      <canvas id="chartCanvas"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:var(--sys)"></div><span>Systolický<br><span class="en">Systolic</span></span></div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--dia)"></div><span>Diastolický<br><span class="en">Diastolic</span></span></div>
+      </div>
+    </div>`;
+  const canvas=document.getElementById('chartCanvas'),dpr=window.devicePixelRatio||1,W=canvas.offsetWidth,H=180;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const sysVals=entries.map(([,v])=>v.sys),diaVals=entries.map(([,v])=>v.dia),all=[...sysVals,...diaVals];
+  const minV=Math.max(40,Math.min(...all)-10),maxV=Math.min(200,Math.max(...all)+10);
+  const pad={top:10,right:10,bottom:30,left:36},cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  const px=i=>pad.left+(i/(entries.length-1))*cw,py=v=>pad.top+ch-((v-minV)/(maxV-minV))*ch;
+  [120,80].forEach(ref=>{
+    const y=py(ref);ctx.strokeStyle='#1e2040';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#4a4a6a';ctx.font='9px Space Mono,monospace';ctx.fillText(ref,2,y+3);
+  });
+  [[sysVals,'#ff6b6b'],[diaVals,'#4ecdc4']].forEach(([vals,color])=>{
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
+    ctx.beginPath();vals.forEach((v,i)=>i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)));ctx.stroke();
+    vals.forEach((v,i)=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(px(i),py(v),3.5,0,Math.PI*2);ctx.fill();});
+  });
+  ctx.fillStyle='#4a4a6a';ctx.font='9px Space Mono,monospace';ctx.textAlign='center';
+  const step=entries.length<=7?1:2;
+  entries.forEach(([d],i)=>{if(i%step===0)ctx.fillText(fmtShort(d),px(i),H-8);});
+}
+
+function renderSummary(area){
+  const vals=Object.values(records);
+  if(!vals.length){area.innerHTML=`<div class="empty">Žádná data.<br><span class="en">No data yet.</span></div>`;return;}
+  const avgSys=Math.round(vals.reduce((a,v)=>a+v.sys,0)/vals.length);
+  const avgDia=Math.round(vals.reduce((a,v)=>a+v.dia,0)/vals.length);
+  const maxSys=Math.max(...vals.map(v=>v.sys)),minSys=Math.min(...vals.map(v=>v.sys));
+  const maxDia=Math.max(...vals.map(v=>v.dia)),minDia=Math.min(...vals.map(v=>v.dia));
+  const cat=getCategory(avgSys,avgDia);
+  const sorted=Object.entries(records).sort(([a],[b])=>a.localeCompare(b));
+  const span=sorted.length>1?`${fmtDate(sorted[0][0])} – ${fmtDate(sorted[sorted.length-1][0])}`:fmtDate(sorted[0][0]);
+  area.innerHTML=`
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.12em;margin-bottom:16px">${vals.length} ZÁZNAMŮ · ENTRIES · ${span}</div>
+    <div class="stat-row"><span class="stat-label">Průměr<br><span class="en">Average</span></span><span class="stat-val"><span style="color:var(--sys)">${avgSys}</span><span style="color:var(--muted);font-size:14px">/</span><span style="color:var(--dia)">${avgDia}</span></span></div>
+    <div class="stat-row"><span class="stat-label">Max. systolický<br><span class="en">Max systolic</span></span><span class="stat-val" style="color:var(--sys)">${maxSys}</span></div>
+    <div class="stat-row"><span class="stat-label">Min. systolický<br><span class="en">Min systolic</span></span><span class="stat-val" style="color:var(--ok)">${minSys}</span></div>
+    <div class="stat-row"><span class="stat-label">Max. diastolický<br><span class="en">Max diastolic</span></span><span class="stat-val" style="color:var(--dia)">${maxDia}</span></div>
+    <div class="stat-row" style="border:none"><span class="stat-label">Min. diastolický<br><span class="en">Min diastolic</span></span><span class="stat-val" style="color:var(--ok)">${minDia}</span></div>
+    <div class="sum-box">
+      <div class="sum-box-label">CELKOVÉ HODNOCENÍ · OVERALL ASSESSMENT</div>
+      <div style="font-size:18px;font-weight:700;color:${cat.color};font-family:'Space Mono',monospace">${cat.cs}</div>
+      <div style="font-size:12px;color:${cat.color};opacity:.7;font-family:'Space Mono',monospace;margin-top:2px">${cat.en}</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px">na základě průměrných hodnot · based on averages</div>
+    </div>
+    <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);line-height:2">
+      💡 Pro lékaře: screenshot záložky Záznamy<br>
+      <span style="font-size:9px;color:var(--dim)">For doctor: screenshot of Log tab</span>
+    </div>
+    <button onclick="exportCSV()" style="margin-top:12px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.04em">
+      ↓ Export CSV pro lékaře · for doctor
+    </button>
+  `;
+}
+
+function exportCSV(){
+  const rows=[['Datum','Systolický','Diastolický','Kategorie (CS)','Category (EN)']];
+  Object.entries(records).sort(([a],[b])=>a.localeCompare(b)).forEach(([date,v])=>{
+    const cat=getCategory(v.sys,v.dia);rows.push([fmtDate(date),v.sys,v.dia,cat.cs,cat.en]);
+  });
+  const csv=rows.map(r=>r.join(';')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='tlak-denik.csv';a.click();URL.revokeObjectURL(url);
+  showToast('📄 CSV uloženo · saved');
+}
+
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+loadRecords();updateHeader();render();
+</script>
+</body>
+</html>
