@@ -1,56 +1,112 @@
-# 🩺 Дневник давления — PWA
+# 🩺 Tlak - Blood Pressure Journal PWA
 
-Приложение для ежедневного трекинга артериального давления.
+> A minimalist, offline-first Progressive Web App for daily blood pressure tracking - built for real personal use, installable without any app store.
 
-## Структура файлов
+![PWA](https://img.shields.io/badge/PWA-ready-7c6dfa?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-6bffb8?style=flat-square)
+![Lang](https://img.shields.io/badge/lang-CS%20%2B%20EN-4ecdc4?style=flat-square)
+![Vanilla JS](https://img.shields.io/badge/built%20with-Vanilla%20JS-ff6b6b?style=flat-square)
 
-```
-index.html      ← главная страница
-manifest.json   ← PWA манифест
-sw.js           ← Service Worker (офлайн)
-icons/
-  icon-192.png
-  icon-512.png
-```
+---
 
-## Деплой на GitHub Pages (5 минут)
+## Motivation
 
-### 1. Создай репозиторий
-- Зайди на github.com → New repository
-- Имя: `davlenie` (или любое)
-- Сделай **Public**
-- Нажми Create repository
+My doctor asked me to track my blood pressure every morning for a few weeks and bring a summary to the next appointment. Every app I found was either bloated with ads, required account registration, or sent my health data to some server I didn't ask about.
 
-### 2. Загрузи файлы
+So I built (1st vibecoded app) this instead - a single HTML file that lives on GitHub Pages, installs like a native app on Android, works completely offline, and exports a clean CSV when it's time for the appointment. No backend. No tracking. No nonsense.
+
+---
+
+## Features
+
+- **Daily logging** - systolic / diastolic input with instant BP category feedback
+- **Visual history** - 14-day chart rendered on raw Canvas (no chart libraries)
+- **Statistics** - average, max, min across all recorded entries
+- **CSV export** - bilingual (CS + EN) table ready to hand to a doctor
+- **Offline support** - Service Worker caches the app on first load
+- **Installable** - full PWA manifest, adds to home screen like a native app
+- **Bilingual UI** - Czech primary, English secondary throughout
+- **Zero dependencies** - no frameworks, no npm, no build step. One HTML file.
+
+---
+
+## Tech
+
+| What | How |
+| --- | --- |
+| UI | Vanilla JS, CSS custom properties |
+| Chart | HTML5 Canvas API |
+| Storage | `localStorage` |
+| Offline | Service Worker + Cache API |
+| Fonts | Google Fonts (Space Mono + Syne) |
+| Hosting | GitHub Pages |
+| Build step | None |
+
+---
+
+## Getting Started
+
+No installation needed. Just open the live app:
+
+**[→ Live App](https://YOUR_USERNAME.github.io/tlak)**
+
+Or run locally - just open `index.html` in any browser. No server needed.
+
+### Deploy your own copy
+
 ```bash
-git init
-git add .
-git commit -m "feat: blood pressure PWA"
-git branch -M main
-git remote add origin https://github.com/ТВО_ИМЯ/davlenie.git
-git push -u origin main
+git clone https://github.com/YOUR_USERNAME/tlak.git
+cd tlak
+# open index.html - done
 ```
 
-### 3. Включи GitHub Pages
-- Settings → Pages → Source: **Deploy from branch**
-- Branch: `main` / `/ (root)` → Save
-- Через ~1 минуту сайт будет на: `https://ТВО_ИМЯ.github.io/davlenie`
+To deploy to GitHub Pages:
 
-### 4. Установи как приложение на Android
-- Открой ссылку в **Chrome**
-- Меню (⋮) → **"Добавить на главный экран"**
-- Готово — иконка появится как обычное приложение
+1. Fork this repo
+2. Go to **Settings → Pages → Source: main / root**
+3. Your instance is live at `https://YOUR_USERNAME.github.io/tlak`
 
-## Функции
+### Install on Android
 
-- ✅ Ввод систолического и диастолического давления
-- 📋 Журнал всех записей с категориями (Норма / Повышенное / Гипертония 1° / 2°)
-- 📈 График последних 14 дней
-- 📊 Сводная статистика (среднее, макс, мин)
-- 📄 Экспорт CSV для врача
-- 📶 Работает офлайн (Service Worker)
-- 💾 Данные хранятся локально в браузере
+1. Open the live URL in **Chrome**
+2. Tap ⋮ → **Add to Home Screen**
+3. Done - works offline, icon on home screen
 
-## Напоминание
+---
 
-Будильник на 7:30 уже поставлен через Claude.
+## BP Categories
+
+Standard ESH/ESC classification:
+
+| Category | Systolic | Diastolic |
+| --- | --- | --- |
+| ✅ Normal / Normální | < 120 | < 80 |
+| ⚠️ Elevated / Zvýšený | 120-129 | < 80 |
+| 🟠 Hypertension 1° / Hypertenze 1° | 130-139 | 80-89 |
+| 🔴 Hypertension 2° / Hypertenze 2° | ≥ 140 | ≥ 90 |
+
+---
+
+## Privacy
+
+All data is stored locally in your browser's `localStorage`. Nothing is sent anywhere. No analytics. No cookies. No server.
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE)
+
+You're free to use and modify this project, but **you must keep the original author credit**. You may not claim this as your own original work.
+
+---
+
+## Author
+
+Built by **chief1y** · [github.com/Chief1y](https://github.com/Chief1y)
+
+*CS student at FIT VUT Brno · part-time automation developer*
+
+---
+
+<sub>Yes, I track my blood pressure now. Getting old is fun.</sub>
